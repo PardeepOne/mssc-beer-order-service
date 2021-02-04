@@ -19,6 +19,7 @@ import javax.transaction.Transactional;
 @Service
 public class BeerOrderManagerImpl implements BeerOrderManager {
 
+    public static final String ORDER_ID_HEADER = "order_id";
     private final StateMachineFactory<BeerOrderStatusEnum, BeerOrderEventEnum> stateMachineFactory;
     private final BeerOrderRepository beerOrderRepository;
     private final BeerOrderStateChangeInterceptor orderStateChangeInterceptor;
