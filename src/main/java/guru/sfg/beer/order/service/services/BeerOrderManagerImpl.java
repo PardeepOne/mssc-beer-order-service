@@ -1,5 +1,6 @@
 package guru.sfg.beer.order.service.services;
 
+import guru.sfg.beer.brewery.model.BeerOrderDto;
 import guru.sfg.beer.order.service.domain.BeerOrder;
 import guru.sfg.beer.order.service.domain.BeerOrderEventEnum;
 import guru.sfg.beer.order.service.domain.BeerOrderStatusEnum;
@@ -48,6 +49,49 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
             sendBeerOrderEvent(beerOrder,BeerOrderEventEnum.VALIDATION_FAILED);;
     }
 
+    @Override
+    public void beerOrderAllocationSuccessful(BeerOrderDto beerOrderDto) {
+        BeerOrder beerOrder = beerOrderRepository.getOne(beerOrderDto.getId());
+        sendBeerOrderEvent(beerOrder,BeerOrderEventEnum.ALLOCATION_SUCCESS);
+        updateAllocatedQty(beerOrderDto,beerOrder);
+    }
+
+    @Override
+    public void beerOrderAllocationFailed(BeerOrderDto beerOrderDto) {
+        BeerOrder beerOrder = beerOrderRepository.getOne(beerOrderDto.getId());
+        sendBeerOrderEvent(beerOrder,BeerOrderEventEnum.ALLOCATION_FAILED);
+    }
+
+    @Override
+    public void beerOrderAllocationPendingInventory(BeerOrderDto beerOrderDto) {
+        BeerOrder beerOrder = beerOrderRepository.getOne(beerOrderDto.getId());
+        sendBeerOrderEvent(beerOrder,BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
+        updateAllocatedQty(beerOrderDto,beerOrder);
+    }
+
+    /**
+     * Updates the {@code beerOrder} on DB with the newly allocated quantity
+     * @param beerOrderDto
+     * @param beerOrder
+     */
+    private void updateAllocatedQty(BeerOrderDto beerOrderDto, BeerOrder beerOrder){
+        BeerOrder allocatedOrder = beerOrderRepository.getOne(beerOrderDto.getId());
+        allocatedOrder.getBeerOrderLines().forEach(beerOrderLine -> {
+            beerOrderDto.getBeerOrderLines().forEach(beerOrderLineDto -> {
+                if(beerOrderLine.getId().equals(beerOrderLineDto.getId())){
+                    beerOrderLine.setQuantityAllocated(beerOrderLineDto.getQuantityAllocated());
+                }
+            });
+        });
+
+        beerOrderRepository.saveAndFlush(beerOrder);
+    }
+
+    /**
+     * Sends an event as a message that will allow the State Machine to make a transition towards another state
+     * @param beerOrder
+     * @param eventEnum
+     */
     private void sendBeerOrderEvent(BeerOrder beerOrder, BeerOrderEventEnum eventEnum){
         StateMachine<BeerOrderStatusEnum,BeerOrderEventEnum> sm = build(beerOrder);
 
@@ -58,6 +102,11 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
         sm.sendEvent(message);
     }
 
+    /**
+     * Builds the State Machine using the Id of {@code beerOrder}
+     * @param beerOrder
+     * @return
+     */
     private StateMachine<BeerOrderStatusEnum,BeerOrderEventEnum> build(BeerOrder beerOrder){
         StateMachine<BeerOrderStatusEnum,BeerOrderEventEnum> sm = stateMachineFactory.getStateMachine(beerOrder.getId());
 
