@@ -36,7 +36,7 @@ public class AllocateOrderAction implements Action<BeerOrderStatusEnum, BeerOrde
         Optional<BeerOrder> beerOrderOptional = beerOrderRepository.findById(UUID.fromString(beerOrderId));
 
         beerOrderOptional.ifPresentOrElse(beerOrder -> {
-                    jmsTemplate.convertAndSend(JmsConfig.ALLOCATE_ORDER_QUEUE,
+                    jmsTemplate.convertAndSend(JmsConfig.ALLOCATE_ORDER_REQUEST_QUEUE,
                             AllocateOrderRequest.builder()
                             .beerOrderDto(beerOrderMapper.beerOrderToDto(beerOrder))
                             .build());

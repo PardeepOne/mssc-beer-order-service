@@ -20,7 +20,7 @@ public class BeerOrderAllocationListener {
 
     private final JmsTemplate jmsTemplate;
 
-    @JmsListener(destination = JmsConfig.ALLOCATE_ORDER_QUEUE)
+    @JmsListener(destination = JmsConfig.ALLOCATE_ORDER_REQUEST_QUEUE)
     public void listen(Message msg){
         AllocateOrderRequest request = (AllocateOrderRequest) msg.getPayload();
 

@@ -69,6 +69,7 @@ local.properties
 ######################
 /log/
 */target/**
+target/
 target/**
 ######################
 # Gradle
@@ -83,6 +84,8 @@ target/**
 *.war
 *.ear
 *.db
+*.class
+*.logs
 
 ######################
 # Windows
